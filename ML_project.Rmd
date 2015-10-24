@@ -1,0 +1,79 @@
+---
+title: "Machine Learning project"
+output: html_document
+---
+
+##Summary
+This report is for the Machine learning course as a part of the Coursera Data Science specialization. Data for various exersizes is used for this project (see citation at bottom). A random forrest model is created to predict the exersize based on accerometer data.
+
+##Data preperation
+
+The data was loaded and all empty columns were removed. Training and testing data sets were created.
+
+```{r loading}
+#loading packages
+library(caret)
+library(randomForest)
+library(gridExtra)
+dat <- read.csv(file="pml-training.csv",header=TRUE)
+#removing columns with no data
+dat <- dat[8:160]
+dat <- dat[c(1:4,13,16,19,30:42,53:67,77:85,88,91,94,95,106:123,126,129,132,133,144:153)]
+dat <- dat[c(1:4,8:29,36:38,48:60,70:80)]
+
+#creating training and test sets
+set.seed(69248)
+inTrain <- createDataPartition(dat$classe,p=0.5,list=FALSE)
+training <- dat[inTrain,]
+testing <- dat[-inTrain,]
+```
+
+##Exploration
+
+There are 52 predictors in the data, so I created a few random plots below to see how the data is related to eachother.
+
+```{r exploring, echo=FALSE}
+#making plots
+a <- ggplot(dat, aes(dat$roll_belt,dat$pitch_belt, color=dat$classe)) + geom_point()
+a <- a + xlab("roll_belt") + ylab("pitch_belt")
+b <- ggplot(dat, aes(dat$roll_arm,dat$yaw_arm, color=dat$classe)) + geom_point()
+b <- b + xlab("roll_arm") + ylab("yaw_arm")
+c <- ggplot(dat, aes(dat$accel_dumbbell_x,dat$magnet_dumbbell_x, color=dat$classe)) + geom_point()
+c <- c + xlab("accel_dumbbell_x") + ylab("magnet_dumbbell")
+d <- ggplot(dat, aes(dat$total_accel_dumbbell,dat$roll_arm, color=dat$classe)) + geom_point()
+d <- d + xlab("total_accel_dumbell") + ylab("roll_arm")
+#printing the plots
+grid.arrange(a,b,c,d,ncol=2)
+```
+
+In the plots it is clear that there is a lot of overlap with some of the exersizes, although some show some very different behaviour to the others.
+
+##Model Creation
+
+For the prediction I use a random forest model using all the variables.
+
+```{r training}
+model_rf <- randomForest(classe ~ ., data=training)
+```
+
+##Model Testing
+
+The model is tested on the remaining data.
+
+```{r testing}
+rf_predict <- predict(model_rf,newdata=testing)
+testing$predRight <- rf_predict==testing$classe
+accuracy <- 100*sum(testing$predRight)/nrow(testing)
+print(model_rf)
+```
+
+The model does a good job and gets most of the exersizes correct. The OOB estimate is < 1%, and the accuracy on the testing set is `r accuracy`%, which is pretty good.
+
+##Conclusion
+
+An random forest model was created for an exersize data set. The model was very accurate.
+
+##Data source
+Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements. Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6.
+
+Read more: http://groupware.les.inf.puc-rio.br/har#ixzz3pFZcll5n
