@@ -11,7 +11,8 @@ This report is for the Machine learning course as a part of the Coursera Data Sc
 
 The data was loaded and all empty columns were removed. Training and testing data sets were created.
 
-```{r loading, cache=TRUE}
+
+```r
 #loading packages
 library(caret)
 library(randomForest)
@@ -33,19 +34,7 @@ testing <- dat[-inTrain,]
 
 There are 52 predictors in the data, so I created a few random plots below to see how the data is related to eachother.
 
-```{r exploring, echo=FALSE, cache=TRUE}
-#making plots
-a <- ggplot(dat, aes(dat$roll_belt,dat$pitch_belt, color=dat$classe)) + geom_point()
-a <- a + xlab("roll_belt") + ylab("pitch_belt")
-b <- ggplot(dat, aes(dat$roll_arm,dat$yaw_arm, color=dat$classe)) + geom_point()
-b <- b + xlab("roll_arm") + ylab("yaw_arm")
-c <- ggplot(dat, aes(dat$accel_dumbbell_x,dat$magnet_dumbbell_x, color=dat$classe)) + geom_point()
-c <- c + xlab("accel_dumbbell_x") + ylab("magnet_dumbbell")
-d <- ggplot(dat, aes(dat$total_accel_dumbbell,dat$roll_arm, color=dat$classe)) + geom_point()
-d <- d + xlab("total_accel_dumbell") + ylab("roll_arm")
-#printing the plots
-grid.arrange(a,b,c,d,ncol=2)
-```
+![plot of chunk exploring](figure/exploring-1.png) 
 
 In the plots it is clear that there is a lot of overlap with some of the exersizes, although some show some very different behaviour to the others.
 
@@ -53,7 +42,8 @@ In the plots it is clear that there is a lot of overlap with some of the exersiz
 
 For the prediction I use a random forest model using all the variables.
 
-```{r training, cache=TRUE}
+
+```r
 model_rf <- randomForest(classe ~ ., data=training)
 ```
 
@@ -61,14 +51,33 @@ model_rf <- randomForest(classe ~ ., data=training)
 
 The model is tested on the remaining data.
 
-```{r testing}
+
+```r
 rf_predict <- predict(model_rf,newdata=testing)
 testing$predRight <- rf_predict==testing$classe
 accuracy <- 100*sum(testing$predRight)/nrow(testing)
 print(model_rf)
 ```
 
-The model does a good job and gets most of the exersizes correct. The OOB estimate is < 1%, and the accuracy on the testing set is `r accuracy`%, which is pretty good.
+```
+## 
+## Call:
+##  randomForest(formula = classe ~ ., data = training) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 7
+## 
+##         OOB estimate of  error rate: 0.87%
+## Confusion matrix:
+##      A    B    C    D    E class.error
+## A 2784    3    1    0    2 0.002150538
+## B   19 1870    9    1    0 0.015271195
+## C    0   18 1691    2    0 0.011689071
+## D    0    0   22 1583    3 0.015547264
+## E    0    1    1    3 1799 0.002771619
+```
+
+The model does a good job and gets most of the exersizes correct. The OOB estimate is < 1%, and the accuracy on the testing set is 99.1539246%, which is pretty good.
 
 ##Conclusion
 
